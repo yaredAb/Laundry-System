@@ -22,39 +22,53 @@ class LaundryApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Laundry System',
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
-      home: const SetupScreen(),
+      home: const LoadingScreen(),
     );
   }
 }
 
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+class LoadingScreen extends StatefulWidget {
+  const LoadingScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  State<LoadingScreen> createState() => _LoadingScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _LoadingScreenState extends State<LoadingScreen> {
   @override
   void initState() {
     super.initState();
-    _testDB();
+    _checkSetup();
   }
 
-  Future<void> _testDB() async {
-    try {
-      print("we are here");
-      final db = await AppDatabase.database;
-      print('Database opened: ${db.isOpen}');
-    } catch (e) {
-      print('DB ERROR: $e');
+  Future<void> _checkSetup() async {
+    final exist = await AppDatabase.hasSettings();
+    if (exist) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const SetupScreen()),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+  }
+}
+
+class MainScreen extends StatelessWidget {
+  const MainScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(child: Text('Initializing database...')),
+      body: Center(child: Text('Welcome to Laundry System')),
     );
   }
 }

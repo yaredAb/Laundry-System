@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_pos/core/database/app_database.dart';
+import 'package:laundry_pos/main.dart';
 
 class SetupScreen extends StatefulWidget {
   const SetupScreen({super.key});
@@ -22,11 +23,7 @@ class _SetupScreenState extends State<SetupScreen> {
     //Navigate to main screen
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (_) => const Scaffold(
-          body: Center(child: Text('Main Screen Placeholder')),
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => const MainScreen()),
     );
   }
 

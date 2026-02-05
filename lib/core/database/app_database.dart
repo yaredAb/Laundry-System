@@ -62,4 +62,10 @@ class AppDatabase {
       )
     ''');
   }
+
+  static Future<bool> hasSettings() async {
+    final db = await database;
+    final result = await db.query('settings', limit: 1);
+    return result.isNotEmpty;
+  }
 }
