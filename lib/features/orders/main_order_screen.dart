@@ -16,6 +16,9 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
   final _newCustomerController = TextEditingController();
   final _newCustomerPhone = TextEditingController();
 
+  //Service List
+  List<Map<String, dynamic>> availableItems = [];
+
   //order items
   List<OrderItem> orderItems = [];
 
@@ -31,6 +34,7 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
   void initState() {
     super.initState();
     _loadCustomers();
+    _loadServiceItems();
   }
 
   Future<void> _loadCustomers() async {
@@ -41,12 +45,21 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
     });
   }
 
+  Future<void> _loadServiceItems() async {
+    final db = await AppDatabase.database;
+    final result = await db.query("items");
+    setState(() {
+      availableItems = result;
+    });
+  }
+
   void _addCustomer() async {
     if (_newCustomerController.text.trim().isEmpty) return;
     final db = await AppDatabase.database;
     int id = await db.insert('customers', {
       'name': _newCustomerController.text,
       'phone': _newCustomerPhone.text,
+      'registered_at': DateTime.now().toIso8601String(),
     });
 
     _loadCustomers();
@@ -59,18 +72,31 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
     _newCustomerPhone.clear();
   }
 
-  void _addOrderItem() {
-    setState(() {
-      orderItems.add(OrderItem(itemName: 'T-shirt', quantity: 1, price: 0.0));
-      _calculateTotal();
-    });
+  void _addOrderItem(Map<String, dynamic> item) {
+    final existing = orderItems.where((e) => e.itemId == item['id']);
+
+    if (existing.isNotEmpty) {
+      existing.first.quantity += 1;
+    } else {
+      orderItems.add(
+        OrderItem(
+          itemId: item['id'],
+          itemName: item['name'],
+          price: item['price'],
+          quantity: 1,
+        ),
+      );
+    }
+    _calculateTotal();
   }
 
   void _calculateTotal() {
-    total = orderItems.fold(
-      0,
-      (sum, item) => sum + (item.quantity * item.price),
-    );
+    setState(() {
+      total = orderItems.fold(
+        0,
+        (sum, item) => sum + (item.quantity * item.price),
+      );
+    });
   }
 
   Future<void> _saveOrder() async {
@@ -96,11 +122,9 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
 
       for (var item in orderItems) {
         await db.insert('order_items', {
-          'id': DateTime.now().microsecondsSinceEpoch.toString(),
           'order_id': orderId,
-          'item_name': item.itemName,
+          'item_id': item.itemId,
           'quantity': item.quantity,
-          'price': item.price,
         });
       }
     } catch (e) {
@@ -121,6 +145,33 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
       total = 0;
       paid = 0;
     });
+  }
+
+  void _showItemPicker() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Select Item"),
+        content: SizedBox(
+          width: 300,
+          height: 300,
+          child: ListView.builder(
+            itemCount: availableItems.length,
+            itemBuilder: (_, index) {
+              final item = availableItems[index];
+              return ListTile(
+                title: Text(item['name']),
+                trailing: Text("${item['price']}"),
+                onTap: () {
+                  _addOrderItem(item);
+                  Navigator.pop(context);
+                },
+              );
+            },
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -208,7 +259,7 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
                   ),
                   const SizedBox(height: 10.0),
                   ElevatedButton(
-                    onPressed: _addOrderItem,
+                    onPressed: _showItemPicker,
                     child: const Text('Add Item'),
                   ),
                   const SizedBox(height: 10.0),
@@ -217,9 +268,39 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
                       itemCount: orderItems.length,
                       itemBuilder: (_, index) {
                         final item = orderItems[index];
-                        return ListTile(
-                          title: Text('${item.itemName} x${item.quantity}'),
-                          trailing: Text('${item.price * item.quantity} ETB'),
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            children: [
+                              Expanded(child: Text(item.itemName)),
+                              Text('${item.price} ETB'),
+                              const SizedBox(width: 8),
+                              SizedBox(
+                                width: 80,
+                                child: TextField(
+                                  decoration: const InputDecoration(
+                                    labelText: 'Qty',
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  onChanged: (v) {
+                                    item.quantity = int.tryParse(v) ?? 1;
+                                    _calculateTotal();
+                                  },
+                                ),
+                              ),
+                              Text('${item.subtotal}'),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    orderItems.remove(item);
+                                    _calculateTotal();
+                                  });
+                                },
+                                icon: Icon(Icons.delete),
+                              ),
+                            ],
+                          ),
                         );
                       },
                     ),

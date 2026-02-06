@@ -46,7 +46,17 @@ class AppDatabase {
       CREATE TABLE customers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
-        phone TEXT
+        phone TEXT,
+        registered_at TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        type TEXT,
+        price REAL
       )
     ''');
 
@@ -55,6 +65,7 @@ class AppDatabase {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         order_number TEXT,
         customer_id INTEGER,
+        order_type TEXT,
         total REAL,
         paid REAL,
         status TEXT,
@@ -66,11 +77,26 @@ class AppDatabase {
       CREATE TABLE order_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         order_id INTEGER,
-        item_name TEXT,
-        quantity INTEGER,
-        price REAL
+        item_id TEXT,
+        quantity INTEGER
       )
     ''');
+
+    await _insertDefaultItems(db);
+  }
+
+  static Future<void> _insertDefaultItems(Database db) async {
+    final items = [
+      {'name': 'T-Shirt', 'price': 50.0},
+      {'name': 'Pants', 'price': 70.0},
+      {'name': 'Shirt', 'price': 60.0},
+      {'name': 'Jacket', 'price': 120.0},
+      {'name': 'Blanket', 'price': 150.0},
+    ];
+
+    for (final item in items) {
+      await db.insert("items", item);
+    }
   }
 
   static Future<bool> hasSettings() async {

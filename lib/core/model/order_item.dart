@@ -1,7 +1,15 @@
 class OrderItem {
+  int itemId;
   String itemName;
   int quantity;
   double price;
 
-  OrderItem({this.itemName = '', this.quantity = 1, this.price = 0.0});
+  OrderItem({
+    required this.itemId,
+    required this.itemName,
+    required this.price,
+    this.quantity = 1,
+  });
+
+  double get subtotal => quantity * price;
 }
