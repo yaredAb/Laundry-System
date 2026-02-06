@@ -61,6 +61,16 @@ class AppDatabase {
         created_at TEXT
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE order_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER,
+        item_name TEXT,
+        quantity INTEGER,
+        price REAL
+      )
+    ''');
   }
 
   static Future<bool> hasSettings() async {

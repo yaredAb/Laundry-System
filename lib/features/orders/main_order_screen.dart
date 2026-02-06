@@ -14,6 +14,7 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
   List<Map<String, dynamic>> customers = [];
   Map<String, dynamic>? selectedCustomer;
   final _newCustomerController = TextEditingController();
+  final _newCustomerPhone = TextEditingController();
 
   //order items
   List<OrderItem> orderItems = [];
@@ -45,7 +46,7 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
     final db = await AppDatabase.database;
     int id = await db.insert('customers', {
       'name': _newCustomerController.text,
-      'phone': '',
+      'phone': _newCustomerPhone.text,
     });
 
     _loadCustomers();
@@ -55,6 +56,7 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
     });
 
     _newCustomerController.clear();
+    _newCustomerPhone.clear();
   }
 
   void _addOrderItem() {
@@ -82,14 +84,32 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
     }
 
     final db = await AppDatabase.database;
-    int orderId = await db.insert('orders', {
-      'order_number': DateTime.now().microsecondsSinceEpoch.toString(),
-      'customer_id': selectedCustomer!['id'],
-      'total': total,
-      'paid': paid,
-      'status': 'Recieved',
-      'created_at': DateTime.now().toIso8601String(),
-    });
+    try {
+      int orderId = await db.insert('orders', {
+        'order_number': DateTime.now().microsecondsSinceEpoch.toString(),
+        'customer_id': selectedCustomer!['id'],
+        'total': total,
+        'paid': paid,
+        'status': 'Recieved',
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      for (var item in orderItems) {
+        await db.insert('order_items', {
+          'id': DateTime.now().microsecondsSinceEpoch.toString(),
+          'order_id': orderId,
+          'item_name': item.itemName,
+          'quantity': item.quantity,
+          'price': item.price,
+        });
+      }
+    } catch (e) {
+      //handle error
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error saving order: $e')));
+      return;
+    }
 
     ScaffoldMessenger.of(
       context,
@@ -125,14 +145,29 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
                   TextField(
                     controller: _newCustomerController,
                     decoration: InputDecoration(
-                      labelText: 'Add Cusomer',
-                      suffixIcon: IconButton(
-                        onPressed: _addCustomer,
-                        icon: const Icon(Icons.add),
-                      ),
+                      labelText: 'Cusomer Name',
+                      // suffixIcon: IconButton(
+                      //   onPressed: _addCustomer,
+                      //   icon: const Icon(Icons.add),
+                      // ),
                     ),
                   ),
                   const SizedBox(height: 10),
+                  TextField(
+                    controller: _newCustomerPhone,
+                    decoration: InputDecoration(
+                      labelText: 'Phone Number',
+                      // suffixIcon: IconButton(
+                      //   onPressed: _addCustomer,
+                      //   icon: const Icon(Icons.add),
+                      // ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _addCustomer,
+                    child: Text("Add Customer"),
+                  ),
                   Expanded(
                     child: ListView.builder(
                       itemCount: customers.length,
