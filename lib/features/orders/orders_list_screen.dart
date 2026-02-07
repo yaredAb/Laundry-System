@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_pos/core/database/app_database.dart';
+import 'package:laundry_pos/features/orders/order_detail_screen.dart';
 
 class OrdersListScreen extends StatefulWidget {
   const OrdersListScreen({super.key});
@@ -85,7 +86,14 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                   ),
                 ],
               ),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => OrderDetailScreen(orderId: order['id']),
+                  ),
+                );
+              },
             ),
           );
         },
