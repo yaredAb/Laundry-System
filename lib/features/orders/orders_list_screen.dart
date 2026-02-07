@@ -19,6 +19,12 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
     _loadOrders();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadOrders();
+  }
+
   Future<void> _loadOrders() async {
     final db = await AppDatabase.database;
 
@@ -86,13 +92,18 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                   ),
                 ],
               ),
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                final updated = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => OrderDetailScreen(orderId: order['id']),
                   ),
                 );
+
+                if (updated == true) {
+                  print("Updated, reloading orders...");
+                  _loadOrders();
+                }
               },
             ),
           );

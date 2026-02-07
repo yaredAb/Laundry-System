@@ -61,6 +61,36 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     });
   }
 
+  Future<void> _updateStatus(String newStatus) async {
+    final db = await AppDatabase.database;
+    await db.update(
+      'orders',
+      {'status': newStatus},
+      where: 'id = ?',
+      whereArgs: [widget.orderId],
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Order status updated to $newStatus')),
+    );
+
+    //_loadOrderDetails();
+    Navigator.pop(context, true);
+  }
+
+  String? getNextStatus(String current) {
+    switch (current) {
+      case 'Recieved':
+        return 'Washing';
+      case 'Washing':
+        return 'Ready';
+      case 'Ready':
+        return 'Delivered';
+      default:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (loading) {
@@ -139,6 +169,43 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ),
                 ),
               ],
+            ),
+            Builder(
+              builder: (context) {
+                final nextStatus = getNextStatus(order!['status']);
+                if (nextStatus != null) {
+                  return Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('Confirm'),
+                            content: Text('Change status to $nextStatus?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Confirm'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirmed == true) {
+                          _updateStatus(nextStatus);
+                        }
+                      },
+                      child: Text('Mark as $nextStatus'),
+                    ),
+                  );
+                }
+                return SizedBox.shrink();
+              },
             ),
           ],
         ),
