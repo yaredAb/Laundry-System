@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_pos/core/database/app_database.dart';
 import 'package:laundry_pos/features/orders/main_order_screen.dart';
+import 'package:laundry_pos/home_screen.dart';
 
 class SetupScreen extends StatefulWidget {
   const SetupScreen({super.key});
@@ -23,7 +24,7 @@ class _SetupScreenState extends State<SetupScreen> {
     //Navigate to main screen
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const MainOrderScreen()),
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
     );
   }
 
