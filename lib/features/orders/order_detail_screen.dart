@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_pos/core/database/app_database.dart';
+import 'package:laundry_pos/screens/recept_screen.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final int orderId;
@@ -104,9 +105,26 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              order!['customer_name'],
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  order!['customer_name'],
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ReceptScreen(orderId: widget.orderId),
+                      ),
+                    );
+                  },
+                  label: const Text('Print Recept'),
+                  icon: const Icon(Icons.print),
+                ),
+              ],
             ),
             Text(order!['phone'] ?? ''),
             const SizedBox(height: 4),
