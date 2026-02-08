@@ -62,6 +62,11 @@ class _ReceptScreenState extends State<ReceptScreen> {
     _loadRecept();
   }
 
+  String _formatDate(String dateStr) {
+    final date = DateTime.parse(dateStr);
+    return "${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute}";
+  }
+
   @override
   Widget build(BuildContext context) {
     if (loading) {
@@ -69,52 +74,81 @@ class _ReceptScreenState extends State<ReceptScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('Recipt')),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Column(
+      body: SizedBox(
+        width: 280,
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      'Maya Laundry',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text('📍 Addis Ababa'),
+                    Divider(),
+                  ],
+                ),
+              ),
+
+              Text('Order #: ${order!['order_number']}'),
+              Text('Customer: ${order!['customer_name']}'),
+              Text('Phone: ${order!['customer_phone']}'),
+              Text('Date: ${_formatDate(order!['created_at'])}'),
+              const Divider(),
+
+              Row(
+                children: const [
+                  Expanded(child: Text('Item')),
+                  Text('Qty'),
+                  SizedBox(width: 10),
+                  Text('Price'),
+                ],
+              ),
+              const Divider(),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: items
+                        .map(
+                          (i) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Row(
+                              children: [
+                                Expanded(child: Text(i['item_name'])),
+                                Text('${i['quantity']}'),
+                                SizedBox(width: 10),
+                                Text('${i['price']}'),
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              ),
+              const Divider(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Maya Laundry',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    'Total',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  Text('📍 Addis Ababa'),
-                  Divider(),
+                  Text(
+                    '${order!['total']} ETB',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
-            ),
-
-            Text('Order #: ${order!['order_number']}'),
-            Text('Customer: ${order!['customer_name']}'),
-            Text('Phone: ${order!['customer_phone']}'),
-            Text('Date: ${order!['created_at']}'),
-            const Divider(),
-
-            Row(
-              children: const [
-                Expanded(child: Text('Item')),
-                Text('Qty'),
-                SizedBox(width: 10),
-                Text('Price'),
-              ],
-            ),
-            const Divider(),
-
-            ...items.map(
-              (i) => Row(
-                children: [
-                  Expanded(child: Text(i['item_name'])),
-                  Text('${i['quantity']}'),
-                  SizedBox(width: 10),
-                  Text('${i['price']}'),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

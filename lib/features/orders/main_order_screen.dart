@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_pos/core/database/app_database.dart';
 import 'package:laundry_pos/core/model/order_item.dart';
+import 'package:laundry_pos/screens/recept_screen.dart';
 
 class MainOrderScreen extends StatefulWidget {
   const MainOrderScreen({super.key});
@@ -99,14 +100,14 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
     });
   }
 
-  Future<void> _saveOrder() async {
+  Future<int?> _saveOrder() async {
     if (selectedCustomer == null || orderItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a customer and add at least one item.'),
         ),
       );
-      return;
+      return null;
     }
 
     final db = await AppDatabase.database;
@@ -127,24 +128,26 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
           'quantity': item.quantity,
         });
       }
+
+      setState(() {
+        selectedCustomer = null;
+        orderItems.clear();
+        total = 0;
+        paid = 0;
+      });
+
+      return orderId;
     } catch (e) {
       //handle error
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error saving order: $e')));
-      return;
+      return null;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Order saved successfully')));
-
-    setState(() {
-      selectedCustomer = null;
-      orderItems.clear();
-      total = 0;
-      paid = 0;
-    });
+    // ScaffoldMessenger.of(
+    //   context,
+    // ).showSnackBar(const SnackBar(content: Text('Order saved successfully')));
   }
 
   void _showItemPicker() {
@@ -168,6 +171,53 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
                 },
               );
             },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showReceiptDialog(int orderId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Align(
+        alignment: Alignment.center,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 280),
+          child: Material(
+            borderRadius: BorderRadius.circular(12),
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(height: 350, child: ReceptScreen(orderId: orderId)),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {},
+                          label: const Text("Share"),
+                          icon: const Icon(Icons.share),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          label: const Text('Done'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -323,7 +373,12 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
                       ),
                       const SizedBox(width: 20),
                       ElevatedButton(
-                        onPressed: _saveOrder,
+                        onPressed: () async {
+                          final orderId = await _saveOrder();
+                          if (orderId != null) {
+                            _showReceiptDialog(orderId);
+                          }
+                        },
                         child: const Text('Save Order'),
                       ),
                     ],
