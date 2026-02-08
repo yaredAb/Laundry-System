@@ -13,6 +13,10 @@ class _ItemsScreenState extends State<ItemsScreen> {
   final TextEditingController _itemPriceController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  //editing mode or not
+  bool _isEditing = false;
+  int? _editingItemId;
+
   //items list
   List<Map<String, dynamic>> _items = [];
   bool _isLoading = true;
@@ -86,6 +90,54 @@ class _ItemsScreenState extends State<ItemsScreen> {
     }
   }
 
+  void _showItem(int id) async {
+    final db = await AppDatabase.database;
+    final item = await db.query('items', where: 'id = ?', whereArgs: [id]);
+
+    if (item.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Item not found")));
+      return;
+    }
+
+    final itemData = item.first;
+    _itemNameController.text = itemData['name'].toString();
+    _itemPriceController.text = itemData['price'].toString();
+    setState(() {
+      _isEditing = true;
+      _editingItemId = id;
+    });
+  }
+
+  void _updateItem() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    try {
+      final name = _itemNameController.text.trim();
+      final price = double.tryParse(_itemPriceController.text.trim()) ?? 0.0;
+
+      final db = await AppDatabase.database;
+      await db.update(
+        'items',
+        {'name': name, 'price': price},
+        where: 'id = ?',
+        whereArgs: [_editingItemId],
+      );
+      setState(() {
+        _isEditing = false;
+        _editingItemId = null;
+      });
+      _itemNameController.clear();
+      _itemPriceController.clear();
+      _fetchItems();
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error updating item: $e")));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -132,8 +184,8 @@ class _ItemsScreenState extends State<ItemsScreen> {
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: _addItem,
-                      child: const Text("Add Item"),
+                      onPressed: _isEditing ? _updateItem : _addItem,
+                      child: Text(_isEditing ? "Update Item" : "Add Item"),
                     ),
 
                     const SizedBox(height: 20),
@@ -154,11 +206,11 @@ class _ItemsScreenState extends State<ItemsScreen> {
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("Price: \$${item['price']}"),
+                                Text("Price: ${item['price']} ETB"),
                                 Row(
                                   children: [
                                     IconButton(
-                                      onPressed: () {},
+                                      onPressed: () => _showItem(item['id']),
                                       icon: Icon(
                                         Icons.edit,
                                         color: Colors.blue,
