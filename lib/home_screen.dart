@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:laundry_pos/features/orders/find_order_screen.dart';
 import 'package:laundry_pos/features/orders/main_order_screen.dart';
 import 'package:laundry_pos/features/orders/orders_list_screen.dart';
+import 'package:laundry_pos/screens/items_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,7 +14,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  final screens = [MainOrderScreen(), OrdersListScreen(), FindOrderScreen()];
+  final screens = [
+    MainOrderScreen(),
+    OrdersListScreen(),
+    FindOrderScreen(),
+    ItemsScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +42,10 @@ class _HomeScreenState extends State<HomeScreen> {
             label: "Orders",
           ),
           BottomNavigationBarItem(icon: Icon(Icons.search), label: "Find"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.inventory_2_outlined),
+            label: "Laundry Items",
+          ),
         ],
       ),
     );
