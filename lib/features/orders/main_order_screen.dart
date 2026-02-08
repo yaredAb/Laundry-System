@@ -1,7 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:laundry_pos/components/receipt_content_full.dart';
 import 'package:laundry_pos/core/database/app_database.dart';
 import 'package:laundry_pos/core/model/order_item.dart';
 import 'package:laundry_pos/screens/recept_screen.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
 
 class MainOrderScreen extends StatefulWidget {
   const MainOrderScreen({super.key});
@@ -30,6 +36,8 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
   //payment
   double total = 0;
   double paid = 0;
+
+  final ScreenshotController _screenshotController = ScreenshotController();
 
   @override
   void initState() {
@@ -177,6 +185,45 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
     );
   }
 
+  Future<void> _shareReceipt(int orderId) async {
+    final image = await _screenshotController.captureFromWidget(
+      MediaQuery(
+        data: MediaQueryData(),
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          // Provides Theme and MediaQuery
+          home: Material(
+            child: Container(
+              width: 250,
+              color: Colors.white,
+              padding: const EdgeInsets.all(12),
+              child: Center(child: ReceiptContentFull(orderId: orderId)),
+            ),
+          ),
+        ),
+      ),
+      delay: const Duration(milliseconds: 100),
+    );
+
+    final directory = await getTemporaryDirectory();
+    final filePath =
+        '${directory.path}/laundry_receipt_${DateTime.now().millisecondsSinceEpoch}.png';
+    final file = File(filePath);
+
+    await file.writeAsBytes(image);
+
+    if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Receipt saved to: $filePath')));
+
+      await Process.run('xdg-open', [filePath]);
+      return;
+    }
+
+    await Share.shareXFiles([XFile(filePath)], text: 'Laundry Receipt');
+  }
+
   void _showReceiptDialog(int orderId) {
     showDialog(
       context: context,
@@ -199,7 +246,7 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () {},
+                          onPressed: () => _shareReceipt(orderId),
                           label: const Text("Share"),
                           icon: const Icon(Icons.share),
                         ),

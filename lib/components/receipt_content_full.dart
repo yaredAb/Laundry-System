@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:laundry_pos/components/receipt_content.dart';
 import 'package:laundry_pos/core/database/app_database.dart';
 
-class ReceptScreen extends StatefulWidget {
+class ReceiptContentFull extends StatefulWidget {
   final int orderId;
-  const ReceptScreen({super.key, required this.orderId});
+  const ReceiptContentFull({super.key, required this.orderId});
 
   @override
-  State<ReceptScreen> createState() => _ReceptScreenState();
+  State<ReceiptContentFull> createState() => _ReceiptContentFullState();
 }
 
-class _ReceptScreenState extends State<ReceptScreen> {
+class _ReceiptContentFullState extends State<ReceiptContentFull> {
   Map<String, dynamic>? order;
   List<Map<String, dynamic>> items = [];
   bool loading = true;
@@ -113,11 +113,7 @@ class _ReceptScreenState extends State<ReceptScreen> {
                 ],
               ),
               const Divider(),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: ReceiptContent(items: items),
-                ),
-              ),
+              ReceiptContent(items: items),
               const Divider(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
