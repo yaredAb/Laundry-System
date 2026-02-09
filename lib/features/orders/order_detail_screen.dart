@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_pos/core/database/app_database.dart';
+import 'package:laundry_pos/core/utils/payment_helper.dart';
 import 'package:laundry_pos/screens/recept_screen.dart';
 
 class OrderDetailScreen extends StatefulWidget {
@@ -64,6 +65,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Future<void> _updateStatus(String newStatus) async {
+    if (newStatus == 'Delivered' && order!['paid'] < order!['total']) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cannot mark as Delivered. Payment pending.'),
+        ),
+      );
+      return;
+    }
+
     final db = await AppDatabase.database;
     await db.update(
       'orders',
@@ -271,46 +281,52 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             Builder(
               builder: (context) {
                 final nextStatus = getNextStatus(order!['status']);
+                final paymentStatus = PaymentHelper.calculatePaymentStatus(
+                  paid: (order!['paid'] as num).toDouble(),
+                  total: (order!['total'] as num).toDouble(),
+                );
+
                 if (nextStatus != null) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
                     child: Row(
                       children: [
-                        if ((order!['payment_status'] ?? 'Paid')
-                                .trim()
-                                .toLowerCase() !=
-                            'paid')
+                        if (paymentStatus != 'Paid')
                           ElevatedButton(
                             onPressed: _showAddPaymentDialogue,
                             child: const Text('Add Payment'),
                           ),
                         const SizedBox(width: 10),
                         ElevatedButton(
-                          onPressed: () async {
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                title: const Text('Confirm'),
-                                content: Text('Change status to $nextStatus?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    child: const Text('Confirm'),
-                                  ),
-                                ],
-                              ),
-                            );
+                          onPressed: paymentStatus != 'Paid'
+                              ? null
+                              : () async {
+                                  final confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder: (_) => AlertDialog(
+                                      title: const Text('Confirm'),
+                                      content: Text(
+                                        'Change status to $nextStatus?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, true),
+                                          child: const Text('Confirm'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
 
-                            if (confirmed == true) {
-                              _updateStatus(nextStatus);
-                            }
-                          },
+                                  if (confirmed == true) {
+                                    _updateStatus(nextStatus);
+                                  }
+                                },
                           child: Text('Mark as $nextStatus'),
                         ),
                       ],
