@@ -58,7 +58,20 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text("Orders")),
+      appBar: AppBar(
+        title: Text("Orders"),
+        actions: [
+          Container(
+            width: 400,
+            child: TextField(
+              decoration: InputDecoration(
+                hint: Text('Search orders...'),
+                suffixIcon: Icon(Icons.search),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: ListView.builder(
         itemCount: orders.length,
         itemBuilder: (_, index) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:laundry_pos/features/customers/customer_list_screen.dart';
 import 'package:laundry_pos/features/orders/find_order_screen.dart';
 import 'package:laundry_pos/features/orders/main_order_screen.dart';
 import 'package:laundry_pos/features/orders/orders_list_screen.dart';
@@ -19,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
     OrdersListScreen(),
     FindOrderScreen(),
     ItemsScreen(),
+    CustomerListScreen(),
   ];
 
   @override
@@ -32,6 +34,8 @@ class _HomeScreenState extends State<HomeScreen> {
             _currentIndex = index;
           });
         },
+        unselectedItemColor: Colors.black,
+        selectedItemColor: Colors.blue,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.add_shopping_cart),
@@ -43,9 +47,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           BottomNavigationBarItem(icon: Icon(Icons.search), label: "Find"),
           BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_2_outlined),
+            icon: Icon(Icons.list_outlined),
             label: "Laundry Items",
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.man), label: "Customers"),
         ],
       ),
     );

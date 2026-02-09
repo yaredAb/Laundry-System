@@ -213,10 +213,6 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
     await file.writeAsBytes(image);
 
     if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Receipt saved to: $filePath')));
-
       await Process.run('xdg-open', [filePath]);
       return;
     }
