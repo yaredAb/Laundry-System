@@ -127,6 +127,7 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
         'paid': paid,
         'status': 'Recieved',
         'payment_status': 'Pending',
+        'order_type': selectedService,
         'created_at': DateTime.now().toIso8601String(),
       });
 
