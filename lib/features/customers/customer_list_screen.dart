@@ -12,10 +12,18 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   List<Map<String, dynamic>> customers = [];
   bool _isLoading = true;
 
-  Future<void> _fetchCustomer() async {
+  //search controler
+  final TextEditingController _searchController = TextEditingController();
+
+  Future<void> _fetchCustomer({String query = ''}) async {
     final db = await AppDatabase.database;
 
-    final result = await db.query('customers', orderBy: 'id DESC');
+    final result = await db.query(
+      'customers',
+      orderBy: 'id DESC',
+      where: 'name LIKE ?',
+      whereArgs: ['%$query%'],
+    );
     setState(() {
       customers = result;
       _isLoading = false;
@@ -25,6 +33,12 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   @override
   void initState() {
     super.initState();
+    _fetchCustomer();
+  }
+
+  void _deleteCustomer(int id) async {
+    final db = await AppDatabase.database;
+    await db.delete('customers', where: 'id = ?', whereArgs: [id]);
     _fetchCustomer();
   }
 
@@ -41,10 +55,14 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   width: 300,
                   padding: EdgeInsets.all(10),
                   child: TextField(
+                    controller: _searchController,
                     decoration: InputDecoration(
                       hint: Text('eg. Abebe or 091234... '),
                       suffixIcon: Icon(Icons.search),
                     ),
+                    onChanged: (value) {
+                      _fetchCustomer(query: value);
+                    },
                   ),
                 ),
               ],
@@ -59,12 +77,13 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   return ListTile(
                     title: Text(
                       customer['name'],
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(fontSize: 16),
                     ),
                     subtitle: Text(customer['phone'] ?? '_'),
+                    trailing: IconButton(
+                      onPressed: () => _deleteCustomer(customer['id']),
+                      icon: Icon(Icons.delete, color: Colors.red),
+                    ),
                   );
                 },
               ),
