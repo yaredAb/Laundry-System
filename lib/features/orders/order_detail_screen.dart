@@ -31,6 +31,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         o.total, 
         o.paid,
         o.status, 
+        o.payment_status,
         o.created_at, 
         c.name AS customer_name,
         c.phone AS customer_phone
@@ -90,6 +91,71 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       default:
         return null;
     }
+  }
+
+  String calculateStatus(double paid, double total) {
+    if (paid <= 0) return 'Pending';
+    if (paid < total) return 'Partial';
+    return 'Paid';
+  }
+
+  Future<void> _addPayment(double amount) async {
+    final db = await AppDatabase.database;
+
+    final newPaid = (order!['paid'] as num).toDouble() + amount;
+    final total = (order!['total'] as num).toDouble();
+
+    if (newPaid > total) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Payment exceeds total amount")),
+      );
+      return;
+    }
+
+    final status = calculateStatus(newPaid, total);
+
+    await db.update(
+      'orders',
+      {'paid': newPaid, 'payment_status': status},
+      where: 'id = ?',
+      whereArgs: [order!['id']],
+    );
+
+    await _loadOrderDetails();
+  }
+
+  void _showAddPaymentDialogue() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Add Payment'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Amount',
+            prefixText: 'ETB   ',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final amount = double.tryParse(controller.text.trim());
+              if (amount == null || amount <= 0) return;
+
+              await _addPayment(amount);
+              Navigator.pop(context);
+            },
+            child: Text('Save'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -157,6 +223,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 },
               ),
             ),
+
             const Divider(),
 
             //summary
@@ -166,6 +233,19 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 const Text('Total', style: TextStyle(fontSize: 16)),
                 Text(
                   '${order!['total']} ETB',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Paid',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '${order!['paid']} ETB',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -193,32 +273,47 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 final nextStatus = getNextStatus(order!['status']);
                 if (nextStatus != null) {
                   return Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                            title: const Text('Confirm'),
-                            content: Text('Change status to $nextStatus?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancel'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Confirm'),
-                              ),
-                            ],
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: Row(
+                      children: [
+                        if ((order!['payment_status'] ?? 'Paid')
+                                .trim()
+                                .toLowerCase() !=
+                            'paid')
+                          ElevatedButton(
+                            onPressed: _showAddPaymentDialogue,
+                            child: const Text('Add Payment'),
                           ),
-                        );
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          onPressed: () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text('Confirm'),
+                                content: Text('Change status to $nextStatus?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: const Text('Confirm'),
+                                  ),
+                                ],
+                              ),
+                            );
 
-                        if (confirmed == true) {
-                          _updateStatus(nextStatus);
-                        }
-                      },
-                      child: Text('Mark as $nextStatus'),
+                            if (confirmed == true) {
+                              _updateStatus(nextStatus);
+                            }
+                          },
+                          child: Text('Mark as $nextStatus'),
+                        ),
+                      ],
                     ),
                   );
                 }

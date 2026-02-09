@@ -69,6 +69,7 @@ class AppDatabase {
         total REAL,
         paid REAL,
         status TEXT,
+        payment_status TEXT,
         created_at TEXT
       )
     ''');

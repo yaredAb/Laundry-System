@@ -30,15 +30,38 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     });
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchCustomer();
-  }
-
   void _deleteCustomer(int id) async {
     final db = await AppDatabase.database;
     await db.delete('customers', where: 'id = ?', whereArgs: [id]);
+    _fetchCustomer();
+  }
+
+  void _confirmDelete(int id) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Confrim Delete"),
+        content: const Text("Are you sure you want to delete this customer?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteCustomer(id);
+            },
+            child: Text("Delete"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
     _fetchCustomer();
   }
 
@@ -81,7 +104,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     ),
                     subtitle: Text(customer['phone'] ?? '_'),
                     trailing: IconButton(
-                      onPressed: () => _deleteCustomer(customer['id']),
+                      onPressed: () => _confirmDelete(customer['id']),
                       icon: Icon(Icons.delete, color: Colors.red),
                     ),
                   );
