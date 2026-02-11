@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_pos/core/database/app_database.dart';
+import 'package:laundry_pos/service/customer_service.dart';
 
 class CustomerListScreen extends StatefulWidget {
   const CustomerListScreen({super.key});
@@ -19,26 +20,16 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   //search controler
   final TextEditingController _searchController = TextEditingController();
 
-  Future<void> _fetchCustomer({String query = ''}) async {
-    final db = await AppDatabase.database;
+  // Future<void> _fetchCustomer({String query = ''}) async {
+  //   final db = await AppDatabase.database;
 
-    final result = await db.query(
-      'customers',
-      orderBy: 'id DESC',
-      where: 'name LIKE ?',
-      whereArgs: ['%$query%'],
-    );
-    setState(() {
-      customers = result;
-      _isLoading = false;
-    });
-  }
-
-  void _deleteCustomer(int id) async {
-    final db = await AppDatabase.database;
-    await db.delete('customers', where: 'id = ?', whereArgs: [id]);
-    _fetchCustomer();
-  }
+  //   final result = await db.query(
+  //     'customers',
+  //     orderBy: 'id DESC',
+  //     where: 'name LIKE ?',
+  //     whereArgs: ['%$query%'],
+  //   );
+  // }
 
   // void _confirmDelete(int id) {
   //   showDialog(
@@ -98,11 +89,18 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     );
   }
 
+  void _fetchCustomer() async {
+    final result = await CustomerService.fetchCustomer();
+    setState(() {
+      customers = result;
+      _isLoading = false;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _fetchCustomer();
-
     _searchController.addListener(() {
       _filterCustomers(_searchController.text);
     });
@@ -745,7 +743,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
             ElevatedButton(
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
-                  // TODO: Implement add customer
+                  CustomerService.addCustomer(
+                    nameController.text,
+                    phone: phoneController.text,
+                  );
                   Navigator.pop(context);
                   // Show success message
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -833,7 +834,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     );
 
     if (confirmed == true) {
-      _deleteCustomer(id);
+      CustomerService.deleteCustomer(id);
+      _refreshCustomers();
     }
   }
 
@@ -865,8 +867,14 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     _filterCustomers('');
   }
 
-  void _refreshCustomers() {
-    _fetchCustomer(query: _searchController.text);
+  void _refreshCustomers() async {
+    final result = await CustomerService.fetchCustomer(
+      query: _searchController.text,
+    );
+    setState(() {
+      customers = result;
+      _filterCustomers(_searchController.text);
+    });
   }
 
   void _exportCustomers() {

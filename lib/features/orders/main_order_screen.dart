@@ -5,6 +5,7 @@ import 'package:laundry_pos/components/receipt_content_full.dart';
 import 'package:laundry_pos/core/database/app_database.dart';
 import 'package:laundry_pos/core/model/order_item.dart';
 import 'package:laundry_pos/screens/recept_screen.dart';
+import 'package:laundry_pos/service/customer_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
@@ -64,13 +65,10 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
 
   void _addCustomer() async {
     if (_newCustomerController.text.trim().isEmpty) return;
-    final db = await AppDatabase.database;
-    int id = await db.insert('customers', {
-      'name': _newCustomerController.text,
-      'phone': _newCustomerPhone.text,
-      'registered_at': DateTime.now().toIso8601String(),
-    });
-
+    final id = CustomerService.addCustomer(
+      _newCustomerController.text,
+      phone: _newCustomerPhone.text,
+    );
     _fetchCustomers();
 
     setState(() {
