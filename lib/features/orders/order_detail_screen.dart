@@ -168,6 +168,35 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
+  void _showDeleteDialogue() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Confirm Delete'),
+        content: const Text('Are you sure you want to delete this order?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _deleteOrder();
+              Navigator.pop(context);
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteOrder() async {
+    final db = await AppDatabase.database;
+    await db.delete('orders', where: 'id = ?', whereArgs: [widget.orderId]);
+    Navigator.pop(context, true);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (loading) {
@@ -188,17 +217,46 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   order!['customer_name'],
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ReceptScreen(orderId: widget.orderId),
-                      ),
-                    );
-                  },
-                  label: const Text('Print Recept'),
-                  icon: const Icon(Icons.print),
+                Row(
+                  children: [
+                    order!['status'] == 'Recieved'
+                        ? ElevatedButton.icon(
+                            icon: Icon(Icons.edit, color: Colors.blue),
+                            onPressed: () {},
+                            label: Text(
+                              'Edit',
+                              style: TextStyle(color: Colors.blue),
+                            ),
+                          )
+                        : SizedBox.shrink(),
+                    const SizedBox(width: 8),
+                    order!['status'] == 'Recieved'
+                        ? ElevatedButton.icon(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              _showDeleteDialogue();
+                            },
+                            label: Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          )
+                        : SizedBox.shrink(),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ReceptScreen(orderId: widget.orderId),
+                          ),
+                        );
+                      },
+                      label: const Text('Print Recept'),
+                      icon: const Icon(Icons.print),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -298,7 +356,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           ),
                         const SizedBox(width: 10),
                         ElevatedButton(
-                          onPressed: paymentStatus != 'Paid'
+                          onPressed:
+                              nextStatus == 'Delivered' &&
+                                  paymentStatus != 'Paid'
                               ? null
                               : () async {
                                   final confirmed = await showDialog<bool>(

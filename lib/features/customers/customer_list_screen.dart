@@ -12,6 +12,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   List<Map<String, dynamic>> customers = [];
   bool _isLoading = true;
 
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+
   //search controler
   final TextEditingController _searchController = TextEditingController();
 
@@ -55,6 +58,41 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
             child: Text("Delete"),
           ),
         ],
+      ),
+    );
+  }
+
+  void _openEditDialogueBox(int id) async {
+    final db = await AppDatabase.database;
+
+    final result = await db.query(
+      'customers',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    final customerData = result.first;
+    setState(() {
+      _nameController.text = customerData['name']?.toString() ?? '';
+      _phoneController.text = customerData['phone']?.toString() ?? '';
+    });
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Edit Customer'),
+        content: Column(
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: 'Customer Name'),
+            ),
+            TextField(
+              controller: _phoneController,
+              decoration: InputDecoration(labelText: 'Customer Phone'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -103,9 +141,14 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                       style: TextStyle(fontSize: 16),
                     ),
                     subtitle: Text(customer['phone'] ?? '_'),
-                    trailing: IconButton(
-                      onPressed: () => _confirmDelete(customer['id']),
-                      icon: Icon(Icons.delete, color: Colors.red),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: () => _confirmDelete(customer['id']),
+                          icon: Icon(Icons.delete, color: Colors.red),
+                        ),
+                      ],
                     ),
                   );
                 },
