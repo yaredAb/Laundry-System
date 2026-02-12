@@ -6,6 +6,8 @@ import 'package:laundry_pos/core/database/app_database.dart';
 import 'package:laundry_pos/core/model/order_item.dart';
 import 'package:laundry_pos/screens/recept_screen.dart';
 import 'package:laundry_pos/service/customer_service.dart';
+import 'package:laundry_pos/service/order_items_service.dart';
+import 'package:laundry_pos/service/order_service.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
@@ -114,23 +116,15 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
 
     final db = await AppDatabase.database;
     try {
-      int orderId = await db.insert('orders', {
-        'order_number': DateTime.now().microsecondsSinceEpoch.toString(),
-        'customer_id': selectedCustomer!['id'],
-        'total': total,
-        'paid': paid,
-        'status': 'Recieved',
-        'payment_status': 'Pending',
-        'order_type': selectedService,
-        'created_at': DateTime.now().toIso8601String(),
-      });
+      final orderId = await OrderService.saveOrder(
+        selectedCustomer!['id'],
+        total,
+        paid,
+        selectedService,
+      );
 
       for (var item in orderItems) {
-        await db.insert('order_items', {
-          'order_id': orderId,
-          'item_id': item.itemId,
-          'quantity': item.quantity,
-        });
+        OrderItemsService.saveItem(orderId!, item.itemId, item.quantity);
       }
 
       setState(() {
@@ -148,10 +142,6 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
       ).showSnackBar(SnackBar(content: Text('Error saving order: $e')));
       return null;
     }
-
-    // ScaffoldMessenger.of(
-    //   context,
-    // ).showSnackBar(const SnackBar(content: Text('Order saved successfully')));
   }
 
   void _showItemPicker() {

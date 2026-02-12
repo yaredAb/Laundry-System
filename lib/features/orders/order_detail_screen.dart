@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:laundry_pos/core/database/app_database.dart';
 import 'package:laundry_pos/core/utils/payment_helper.dart';
 import 'package:laundry_pos/screens/recept_screen.dart';
+import 'package:laundry_pos/service/order_service.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final int orderId;
@@ -22,44 +23,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _loadOrderDetails();
   }
 
-  Future<void> _loadOrderDetails() async {
-    final db = await AppDatabase.database;
-    final orderResult = await db.rawQuery(
-      '''
-      SELECT 
-        o.id, 
-        o.order_number, 
-        o.total, 
-        o.paid,
-        o.status, 
-        o.payment_status,
-        o.created_at, 
-        c.name AS customer_name,
-        c.phone AS customer_phone
-      FROM orders o
-      JOIN customers c ON o.customer_id = c.id
-      WHERE o.id = ?
-      ''',
-      [widget.orderId],
-    );
-
-    final itemResult = await db.rawQuery(
-      '''
-      SELECT 
-        i.name AS item_name,
-        i.price,
-        oi.quantity,
-        (i.price * oi.quantity) AS total
-      FROM order_items oi
-      JOIN items i ON oi.item_id = i.id
-      WHERE oi.order_id = ?
-    ''',
-      [widget.orderId],
-    );
+  void _loadOrderDetails() async {
+    final data = await OrderService.loadOrderDetails(widget.orderId);
 
     setState(() {
-      order = orderResult.first;
-      items = itemResult;
+      order = data['order'];
+      items = data['items'];
       loading = false;
     });
   }
@@ -74,13 +43,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return;
     }
 
-    final db = await AppDatabase.database;
-    await db.update(
-      'orders',
-      {'status': newStatus},
-      where: 'id = ?',
-      whereArgs: [widget.orderId],
-    );
+    OrderService.updateStatus(newStatus, widget.orderId);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Order status updated to $newStatus')),
@@ -110,8 +73,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Future<void> _addPayment(double amount) async {
-    final db = await AppDatabase.database;
-
     final newPaid = (order!['paid'] as num).toDouble() + amount;
     final total = (order!['total'] as num).toDouble();
 
@@ -124,14 +85,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     final status = calculateStatus(newPaid, total);
 
-    await db.update(
-      'orders',
-      {'paid': newPaid, 'payment_status': status},
-      where: 'id = ?',
-      whereArgs: [order!['id']],
-    );
+    await OrderService.appPayment(newPaid, status, order!['id']);
 
-    await _loadOrderDetails();
+    _loadOrderDetails();
   }
 
   void _showAddPaymentDialogue() {
@@ -181,7 +137,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              _deleteOrder();
+              OrderService.deleteOrder(widget.orderId);
               Navigator.pop(context);
             },
             child: const Text('Delete'),

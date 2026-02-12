@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_pos/core/database/app_database.dart';
 import 'package:laundry_pos/features/orders/order_detail_screen.dart';
+import 'package:laundry_pos/service/order_service.dart';
 
 class OrdersListScreen extends StatefulWidget {
   const OrdersListScreen({super.key});
@@ -28,22 +29,8 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
     _loadOrders();
   }
 
-  Future<void> _loadOrders() async {
-    final db = await AppDatabase.database;
-
-    final result = await db.rawQuery('''
-      SELECT 
-        o.id, 
-        o.order_number, 
-        o.total, 
-        o.status, 
-        o.created_at, 
-        c.name AS customer_name
-      FROM orders o
-      JOIN customers c ON o.customer_id = c.id
-      ORDER BY o.created_at DESC
-  ''');
-
+  void _loadOrders() async {
+    final result = await OrderService.loadOrdersWithCustomer();
     setState(() {
       orders = result;
       loading = false;
@@ -156,7 +143,13 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
       body: orders.isEmpty
           ? _buildEmptyState()
           : RefreshIndicator(
-              onRefresh: _loadOrders,
+              onRefresh: () async {
+                final result = await OrderService.loadOrdersWithCustomer();
+                setState(() {
+                  orders = result;
+                  loading = false;
+                });
+              },
               color: Theme.of(context).colorScheme.primary,
               child: ListView.builder(
                 padding: const EdgeInsets.all(20),
