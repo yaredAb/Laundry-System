@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:laundry_pos/core/database/app_database.dart';
 import 'package:laundry_pos/features/orders/order_detail_screen.dart';
 import 'package:laundry_pos/service/order_service.dart';
 

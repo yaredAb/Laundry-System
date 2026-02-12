@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:laundry_pos/core/database/app_database.dart';
+import 'package:laundry_pos/features/customers/customer_detail_screen.dart';
 import 'package:laundry_pos/service/customer_service.dart';
 
 class CustomerListScreen extends StatefulWidget {
@@ -14,8 +14,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   List<Map<String, dynamic>> _filteredCustomers = [];
   bool _isLoading = true;
 
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
+  // final _nameController = TextEditingController();
+  // final _phoneController = TextEditingController();
 
   //search controler
   final TextEditingController _searchController = TextEditingController();
@@ -54,40 +54,40 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   //   );
   // }
 
-  void _openEditDialogueBox(int id) async {
-    final db = await AppDatabase.database;
+  // void _openEditDialogueBox(int id) async {
+  //   final db = await AppDatabase.database;
 
-    final result = await db.query(
-      'customers',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+  //   final result = await db.query(
+  //     'customers',
+  //     where: 'id = ?',
+  //     whereArgs: [id],
+  //   );
 
-    final customerData = result.first;
-    setState(() {
-      _nameController.text = customerData['name']?.toString() ?? '';
-      _phoneController.text = customerData['phone']?.toString() ?? '';
-    });
+  //   final customerData = result.first;
+  //   setState(() {
+  //     _nameController.text = customerData['name']?.toString() ?? '';
+  //     _phoneController.text = customerData['phone']?.toString() ?? '';
+  //   });
 
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Edit Customer'),
-        content: Column(
-          children: [
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: 'Customer Name'),
-            ),
-            TextField(
-              controller: _phoneController,
-              decoration: InputDecoration(labelText: 'Customer Phone'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  //   showDialog(
+  //     context: context,
+  //     builder: (_) => AlertDialog(
+  //       title: const Text('Edit Customer'),
+  //       content: Column(
+  //         children: [
+  //           TextField(
+  //             controller: _nameController,
+  //             decoration: InputDecoration(labelText: 'Customer Name'),
+  //           ),
+  //           TextField(
+  //             controller: _phoneController,
+  //             decoration: InputDecoration(labelText: 'Customer Phone'),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   void _fetchCustomer() async {
     final result = await CustomerService.fetchCustomer();
@@ -376,7 +376,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
         side: BorderSide(color: Colors.grey.shade200),
       ),
       child: InkWell(
-        onTap: () => _viewCustomerDetails(customer),
+        onTap: () => _viewCustomerDetails(customer['id']),
         borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
@@ -887,12 +887,11 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     );
   }
 
-  void _viewCustomerDetails(Map<String, dynamic> customer) {
-    // TODO: Navigate to customer details screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Viewing ${customer['name']}'),
-        behavior: SnackBarBehavior.floating,
+  void _viewCustomerDetails(int id) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CustomerDetailScreen(customer: {}, customerId: id),
       ),
     );
   }

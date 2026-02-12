@@ -114,7 +114,6 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
       return null;
     }
 
-    final db = await AppDatabase.database;
     try {
       final orderId = await OrderService.saveOrder(
         selectedCustomer!['id'],

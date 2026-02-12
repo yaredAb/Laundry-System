@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:laundry_pos/core/database/app_database.dart';
 import 'package:laundry_pos/core/utils/payment_helper.dart';
 import 'package:laundry_pos/screens/recept_screen.dart';
 import 'package:laundry_pos/service/order_service.dart';
@@ -170,12 +169,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   //     ),
   //   );
   // }
-
-  void _deleteOrder() async {
-    final db = await AppDatabase.database;
-    await db.delete('orders', where: 'id = ?', whereArgs: [widget.orderId]);
-    Navigator.pop(context, true);
-  }
 
   @override
   Widget build(BuildContext context) {
