@@ -32,6 +32,18 @@ class CustomerService {
     await db.delete('customers', where: 'id = ?', whereArgs: [id]);
   }
 
+  static Future<bool> updateCustomer(int id, Map<String, dynamic> data) async {
+    final db = await AppDatabase.database;
+    await db.update(
+      'customers',
+      {'name': data['name'], 'phone': data['phone']},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    return true;
+  }
+
   static Future<Map<String, dynamic>> getCustomer(int id) async {
     final db = await AppDatabase.database;
     final result = await db.query(

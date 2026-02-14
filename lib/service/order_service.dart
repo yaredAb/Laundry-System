@@ -100,4 +100,19 @@ class OrderService {
     final db = await AppDatabase.database;
     await db.delete('orders', where: 'id = ?', whereArgs: [orderId]);
   }
+
+  static Future<List<Map<String, dynamic>>> loadOrderByCustomer(
+    int customerId,
+  ) async {
+    final db = await AppDatabase.database;
+
+    final orders = await db.query(
+      'orders',
+      where: 'customer_id = ?',
+      orderBy: 'id DESC',
+      whereArgs: [customerId],
+    );
+
+    return orders;
+  }
 }

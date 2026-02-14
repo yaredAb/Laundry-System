@@ -13,7 +13,8 @@ import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
 class MainOrderScreen extends StatefulWidget {
-  const MainOrderScreen({super.key});
+  final Map<String, dynamic>? chosenCustomer;
+  const MainOrderScreen({super.key, this.chosenCustomer});
 
   @override
   State<MainOrderScreen> createState() => _MainOrderScreenState();
@@ -47,6 +48,12 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
     super.initState();
     _fetchCustomers();
     _loadServiceItems();
+
+    if (widget.chosenCustomer != null) {
+      setState(() {
+        selectedCustomer = widget.chosenCustomer;
+      });
+    }
   }
 
   Future<void> _fetchCustomers() async {
