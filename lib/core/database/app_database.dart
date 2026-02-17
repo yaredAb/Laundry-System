@@ -70,6 +70,7 @@ class AppDatabase {
         paid REAL,
         status TEXT,
         payment_status TEXT,
+        delivery_date TEXT,
         created_at TEXT
       )
     ''');

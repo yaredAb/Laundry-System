@@ -8,6 +8,7 @@ import 'package:laundry_pos/screens/recept_screen.dart';
 import 'package:laundry_pos/service/customer_service.dart';
 import 'package:laundry_pos/service/order_items_service.dart';
 import 'package:laundry_pos/service/order_service.dart';
+import 'package:laundry_pos/widgets/date_picker_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
@@ -40,6 +41,9 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
   //payment
   double total = 0;
   double paid = 0;
+
+  //delivery date
+  DateTime? _deliveryDate;
 
   final ScreenshotController _screenshotController = ScreenshotController();
 
@@ -127,6 +131,7 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
         total,
         paid,
         selectedService,
+        _deliveryDate!,
       );
 
       for (var item in orderItems) {
@@ -151,27 +156,444 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
   }
 
   void _showItemPicker() {
+    final searchController = TextEditingController();
+    List<Map<String, dynamic>> filteredItems = List.from(availableItems);
+
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Select Item"),
-        content: SizedBox(
-          width: 300,
-          height: 300,
-          child: ListView.builder(
-            itemCount: availableItems.length,
-            itemBuilder: (_, index) {
-              final item = availableItems[index];
-              return ListTile(
-                title: Text(item['name']),
-                trailing: Text("${item['price']}"),
-                onTap: () {
-                  _addOrderItem(item);
-                  Navigator.pop(context);
-                },
-              );
-            },
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              child: Container(
+                width: 500, // Fixed width for desktop
+                constraints: const BoxConstraints(maxHeight: 700),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // ============ HEADER ============
+                    Container(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF2196F3),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.shopping_bag_outlined,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Select Service Item',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Choose an item to add to order',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.close, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // ============ SEARCH BAR ============
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: TextField(
+                        controller: searchController,
+                        onChanged: (query) {
+                          setState(() {
+                            if (query.isEmpty) {
+                              filteredItems = List.from(availableItems);
+                            } else {
+                              filteredItems = availableItems.where((item) {
+                                final name = item['name']
+                                    .toString()
+                                    .toLowerCase();
+                                final searchLower = query.toLowerCase();
+                                return name.contains(searchLower);
+                              }).toList();
+                            }
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search items...',
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: Color(0xFF2196F3),
+                          ),
+                          suffixIcon: searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear, size: 18),
+                                  onPressed: () {
+                                    searchController.clear();
+                                    setState(() {
+                                      filteredItems = List.from(availableItems);
+                                    });
+                                  },
+                                )
+                              : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF2196F3),
+                              width: 2,
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // ============ ITEMS COUNT ============
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${filteredItems.length} items available',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 13,
+                            ),
+                          ),
+                          if (filteredItems.isEmpty)
+                            Text(
+                              'Try adjusting search',
+                              style: TextStyle(
+                                color: Colors.orange.shade700,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // ============ ITEMS LIST ============
+                    Flexible(
+                      child: filteredItems.isEmpty
+                          ? _buildEmptyItemsState()
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              itemCount: filteredItems.length,
+                              itemBuilder: (_, index) {
+                                final item = filteredItems[index];
+                                return _buildItemCard(
+                                  item: item,
+                                  onTap: () {
+                                    _addOrderItem(item);
+                                    Navigator.pop(context);
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+
+                    // ============ FOOTER ============
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(20),
+                          bottomRight: Radius.circular(20),
+                        ),
+                        border: Border(
+                          top: BorderSide(color: Colors.grey.shade200),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Selected: ${orderItems.length} items',
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              side: BorderSide(color: Colors.grey.shade400),
+                            ),
+                            child: const Text('Close'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ============ ITEM CARD WIDGET ============
+  Widget _buildItemCard({
+    required Map<String, dynamic> item,
+    required VoidCallback onTap,
+  }) {
+    final price = (item['price'] as num).toDouble();
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Item Icon
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    item['name'].toString()[0].toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+
+              // Item Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item['name'],
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.teal.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'ID: ${item['id']}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.teal.shade700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.inventory,
+                          size: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'In stock',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Price and Add Button
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.teal.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${price.toStringAsFixed(2)} ETB',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF009688),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.add, size: 14, color: Color(0xFF2196F3)),
+                          SizedBox(width: 2),
+                          Text(
+                            'Add',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2196F3),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+
+  // ============ EMPTY ITEMS STATE ============
+  Widget _buildEmptyItemsState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.search_off,
+                size: 48,
+                color: Colors.grey.shade400,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No items found',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try adjusting your search term',
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+            ),
+          ],
         ),
       ),
     );
@@ -886,57 +1308,101 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
                               // Service Selection Row
                               Row(
                                 children: [
-                                  const Icon(
-                                    Icons.local_laundry_service,
-                                    size: 20,
-                                    color: Colors.grey,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Text(
-                                    'Service Type:',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  DropdownButton<String>(
-                                    value: selectedService,
-                                    items: ['Wash', 'Dry Clean', 'Iron']
-                                        .map(
-                                          (s) => DropdownMenuItem(
-                                            value: s,
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 12,
-                                                    vertical: 4,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: _getServiceColor(
-                                                  s,
-                                                ).withOpacity(0.1),
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                              ),
-                                              child: Text(
-                                                s,
-                                                style: TextStyle(
-                                                  color: _getServiceColor(s),
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.local_laundry_service,
+                                            size: 20,
+                                            color: Colors.grey,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'Service Type:',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
                                             ),
                                           ),
-                                        )
-                                        .toList(),
-                                    onChanged: (v) {
-                                      setState(() {
-                                        selectedService = v!;
-                                      });
-                                    },
-                                    underline: Container(),
-                                    icon: const Icon(Icons.arrow_drop_down),
-                                    style: const TextStyle(fontSize: 16),
+                                          const SizedBox(width: 16),
+                                          DropdownButton<String>(
+                                            value: selectedService,
+                                            items: ['Wash', 'Dry Clean', 'Iron']
+                                                .map(
+                                                  (s) => DropdownMenuItem(
+                                                    value: s,
+                                                    child: Container(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 12,
+                                                            vertical: 4,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color: _getServiceColor(
+                                                          s,
+                                                        ).withOpacity(0.1),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              4,
+                                                            ),
+                                                      ),
+                                                      child: Text(
+                                                        s,
+                                                        style: TextStyle(
+                                                          color:
+                                                              _getServiceColor(
+                                                                s,
+                                                              ),
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                )
+                                                .toList(),
+                                            onChanged: (v) {
+                                              setState(() {
+                                                selectedService = v!;
+                                              });
+                                            },
+                                            underline: Container(),
+                                            icon: const Icon(
+                                              Icons.arrow_drop_down,
+                                            ),
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.calendar_month,
+                                            size: 20,
+                                            color: Colors.grey,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'Delivery Date:',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          DatePickerWidget(
+                                            onDateSelected: (date) {
+                                              setState(() {
+                                                _deliveryDate = date;
+                                              });
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                   const Spacer(),
 

@@ -55,6 +55,7 @@ class OrderService {
     double total,
     double paid,
     String selectedService,
+    DateTime deliveryDate,
   ) async {
     final db = await AppDatabase.database;
 
@@ -64,6 +65,7 @@ class OrderService {
       'total': total,
       'paid': paid,
       'status': 'Recieved',
+      'delivery_date': deliveryDate.toString(),
       'payment_status': 'Pending',
       'order_type': selectedService,
       'created_at': DateTime.now().toIso8601String(),
