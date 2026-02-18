@@ -8,6 +8,7 @@ import 'package:laundry_pos/screens/recept_screen.dart';
 import 'package:laundry_pos/service/customer_service.dart';
 import 'package:laundry_pos/service/order_items_service.dart';
 import 'package:laundry_pos/service/order_service.dart';
+import 'package:laundry_pos/service/payment_service.dart';
 import 'package:laundry_pos/widgets/date_picker_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
@@ -128,14 +129,19 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
     try {
       final orderId = await OrderService.saveOrder(
         selectedCustomer!['id'],
-        total,
-        paid,
         selectedService,
         _deliveryDate!,
       );
 
+      await PaymentService.savePayment(
+        orderId: orderId!,
+        customerId: selectedCustomer!['id'],
+        total: total,
+        paid: paid,
+      );
+
       for (var item in orderItems) {
-        OrderItemsService.saveItem(orderId!, item.itemId, item.quantity);
+        OrderItemsService.saveItem(orderId, item.itemId, item.quantity);
       }
 
       setState(() {

@@ -66,14 +66,23 @@ class AppDatabase {
         order_number TEXT,
         customer_id INTEGER,
         order_type TEXT,
-        total REAL,
-        paid REAL,
         status TEXT,
         payment_status TEXT,
         delivery_date TEXT,
         created_at TEXT
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER,
+        customer_id INTEGER,
+        total REAL,
+        paid REAL,
+        payment_method TEXT,
+        created_at TEXT
+      )''');
 
     await db.execute('''
       CREATE TABLE order_items (

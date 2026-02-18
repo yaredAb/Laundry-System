@@ -52,8 +52,6 @@ class OrderService {
 
   static Future<int?> saveOrder(
     int customerId,
-    double total,
-    double paid,
     String selectedService,
     DateTime deliveryDate,
   ) async {
@@ -62,8 +60,6 @@ class OrderService {
     int orderId = await db.insert('orders', {
       'order_number': DateTime.now().microsecondsSinceEpoch.toString(),
       'customer_id': customerId,
-      'total': total,
-      'paid': paid,
       'status': 'Recieved',
       'delivery_date': deliveryDate.toString(),
       'payment_status': 'Pending',
