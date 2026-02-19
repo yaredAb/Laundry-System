@@ -8,7 +8,6 @@ import 'package:laundry_pos/screens/recept_screen.dart';
 import 'package:laundry_pos/service/customer_service.dart';
 import 'package:laundry_pos/service/order_items_service.dart';
 import 'package:laundry_pos/service/order_service.dart';
-import 'package:laundry_pos/service/payment_service.dart';
 import 'package:laundry_pos/widgets/date_picker_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
@@ -44,7 +43,7 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
   double paid = 0;
 
   //delivery date
-  DateTime? _deliveryDate;
+  DateTime? _deliveryDate = DateTime.now();
 
   final ScreenshotController _screenshotController = ScreenshotController();
 
@@ -121,6 +120,7 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
   }
 
   Future<int?> _saveOrder() async {
+    print('delivery date: $_deliveryDate');
     if (selectedCustomer == null || orderItems.isEmpty) {
       _showErrorSnackbar('Please select a customer and add at least one item');
       return null;
@@ -130,18 +130,12 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
       final orderId = await OrderService.saveOrder(
         selectedCustomer!['id'],
         selectedService,
+        total,
         _deliveryDate!,
       );
 
-      await PaymentService.savePayment(
-        orderId: orderId!,
-        customerId: selectedCustomer!['id'],
-        total: total,
-        paid: paid,
-      );
-
       for (var item in orderItems) {
-        OrderItemsService.saveItem(orderId, item.itemId, item.quantity);
+        OrderItemsService.saveItem(orderId!, item.itemId, item.quantity);
       }
 
       setState(() {

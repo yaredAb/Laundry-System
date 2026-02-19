@@ -67,6 +67,8 @@ class AppDatabase {
         customer_id INTEGER,
         order_type TEXT,
         status TEXT,
+        total REAL,
+        paid REAL,
         payment_status TEXT,
         delivery_date TEXT,
         created_at TEXT
@@ -81,6 +83,7 @@ class AppDatabase {
         total REAL,
         paid REAL,
         payment_method TEXT,
+        payment_status
         created_at TEXT
       )''');
 

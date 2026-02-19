@@ -7,6 +7,7 @@ class PaymentService {
     required double total,
     double paid = 0,
     String paymentType = 'Cash',
+    String paymentStatus = 'Pending',
   }) async {
     final db = await AppDatabase.database;
 
@@ -18,5 +19,20 @@ class PaymentService {
       'payment_method': paymentType,
       'created_at': DateTime.now().toIso8601String(),
     });
+  }
+
+  static Future<void> addPayment(
+    int orderId,
+    double paidAMount,
+    String status,
+  ) async {
+    final db = await AppDatabase.database;
+
+    await db.update(
+      'payments',
+      {'paid': paidAMount, 'payment_status': status},
+      where: 'order_id = ?',
+      whereArgs: [orderId],
+    );
   }
 }
