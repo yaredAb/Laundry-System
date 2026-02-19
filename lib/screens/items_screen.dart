@@ -19,6 +19,7 @@ class _ItemsScreenState extends State<ItemsScreen> {
 
   //items list
   List<Map<String, dynamic>> _items = [];
+  List<Map<String, dynamic>> _filteredItems = [];
   bool _isLoading = true;
 
   //fetching all items
@@ -28,6 +29,7 @@ class _ItemsScreenState extends State<ItemsScreen> {
       final items = await db.query('items', orderBy: 'id DESC');
       setState(() {
         _items = items;
+        _filteredItems = items;
         _isLoading = false;
       });
     } catch (e) {
@@ -54,29 +56,6 @@ class _ItemsScreenState extends State<ItemsScreen> {
       ).showSnackBar(SnackBar(content: Text("Error adding item: $e")));
     }
   }
-
-  // void _confirmDelete(int id) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (_) => AlertDialog(
-  //       title: const Text("Confirm Delete"),
-  //       content: const Text("Are you sure you want to delete this item?"),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Navigator.pop(context),
-  //           child: const Text("Cancel"),
-  //         ),
-  //         ElevatedButton(
-  //           onPressed: () {
-  //             Navigator.pop(context);
-  //             _deleteItem(id);
-  //           },
-  //           child: const Text("Delete"),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   void _deleteItem(int id) async {
     try {
@@ -158,9 +137,6 @@ class _ItemsScreenState extends State<ItemsScreen> {
     return (total / _items.length).toStringAsFixed(2);
   }
 
-  // ============ SEARCH FILTERING ============
-  List<Map<String, dynamic>> _filteredItems = [];
-
   void _filterItems(String query) {
     setState(() {
       if (query.isEmpty) {
@@ -194,6 +170,15 @@ class _ItemsScreenState extends State<ItemsScreen> {
   void initState() {
     super.initState();
     _fetchItems();
+    _searchController.addListener(() {
+      _filterItems(_searchController.text);
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -607,97 +592,107 @@ class _ItemsScreenState extends State<ItemsScreen> {
                             ),
                             child: Padding(
                               padding: const EdgeInsets.all(24.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Header
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color: Colors.teal.withOpacity(
-                                                0.1,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: const Icon(
-                                              Icons.format_list_bulleted,
-                                              size: 20,
-                                              color: Colors.teal,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          const Text(
-                                            'Items List',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      // Quick Stats
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.green.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        child: Row(
+
+                              // In the right panel Card, replace the Column with:
+                              child: Padding(
+                                padding: const EdgeInsets.all(24.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Header (fixed height)
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
                                           children: [
-                                            const Icon(
-                                              Icons.attach_money,
-                                              size: 16,
-                                              color: Colors.green,
+                                            Container(
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                color: Colors.teal.withOpacity(
+                                                  0.1,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: const Icon(
+                                                Icons.format_list_bulleted,
+                                                size: 20,
+                                                color: Colors.teal,
+                                              ),
                                             ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'Avg: ${_calculateAveragePrice()} ETB',
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.green,
+                                            const SizedBox(width: 12),
+                                            const Text(
+                                              'Items List',
+                                              style: TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold,
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // Items Grid/List - FIXED HERE
-                                  _filteredItems.isEmpty
-                                      ? _buildEmptyItemsState()
-                                      : GridView.builder(
-                                          key: const PageStorageKey<String>(
-                                            'items_grid',
-                                          ), // ADDED KEY
-                                          gridDelegate:
-                                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                                crossAxisCount: 2,
-                                                childAspectRatio: 2.2,
-                                                crossAxisSpacing: 16,
-                                                mainAxisSpacing: 16,
+                                        // Quick Stats
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green.withOpacity(
+                                              0.1,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.attach_money,
+                                                size: 16,
+                                                color: Colors.green,
                                               ),
-                                          itemCount: _filteredItems.length,
-                                          itemBuilder: (_, index) {
-                                            final item = _filteredItems[index];
-                                            return _buildItemCard(item);
-                                          },
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'Avg: ${_calculateAveragePrice()} ETB',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Colors.green,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+
+                                    // Items Grid/List - WRAP WITH EXPANDED
+                                    Expanded(
+                                      child: _filteredItems.isEmpty
+                                          ? _buildEmptyItemsState()
+                                          : GridView.builder(
+                                              key: const PageStorageKey<String>(
+                                                'items_grid',
+                                              ),
+                                              gridDelegate:
+                                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                                    crossAxisCount: 2,
+                                                    childAspectRatio: 2.2,
+                                                    crossAxisSpacing: 16,
+                                                    mainAxisSpacing: 16,
+                                                  ),
+                                              itemCount: _filteredItems.length,
+                                              itemBuilder: (_, index) {
+                                                final item =
+                                                    _filteredItems[index];
+                                                return _buildItemCard(item);
+                                              },
+                                            ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),

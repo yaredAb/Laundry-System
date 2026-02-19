@@ -14,85 +14,14 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   List<Map<String, dynamic>> _filteredCustomers = [];
   bool _isLoading = true;
 
-  // final _nameController = TextEditingController();
-  // final _phoneController = TextEditingController();
-
   //search controler
   final TextEditingController _searchController = TextEditingController();
-
-  // Future<void> _fetchCustomer({String query = ''}) async {
-  //   final db = await AppDatabase.database;
-
-  //   final result = await db.query(
-  //     'customers',
-  //     orderBy: 'id DESC',
-  //     where: 'name LIKE ?',
-  //     whereArgs: ['%$query%'],
-  //   );
-  // }
-
-  // void _confirmDelete(int id) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (_) => AlertDialog(
-  //       title: const Text("Confrim Delete"),
-  //       content: const Text("Are you sure you want to delete this customer?"),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Navigator.pop(context),
-  //           child: Text("Cancel"),
-  //         ),
-  //         ElevatedButton(
-  //           onPressed: () {
-  //             Navigator.pop(context);
-  //             _deleteCustomer(id);
-  //           },
-  //           child: Text("Delete"),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // void _openEditDialogueBox(int id) async {
-  //   final db = await AppDatabase.database;
-
-  //   final result = await db.query(
-  //     'customers',
-  //     where: 'id = ?',
-  //     whereArgs: [id],
-  //   );
-
-  //   final customerData = result.first;
-  //   setState(() {
-  //     _nameController.text = customerData['name']?.toString() ?? '';
-  //     _phoneController.text = customerData['phone']?.toString() ?? '';
-  //   });
-
-  //   showDialog(
-  //     context: context,
-  //     builder: (_) => AlertDialog(
-  //       title: const Text('Edit Customer'),
-  //       content: Column(
-  //         children: [
-  //           TextField(
-  //             controller: _nameController,
-  //             decoration: InputDecoration(labelText: 'Customer Name'),
-  //           ),
-  //           TextField(
-  //             controller: _phoneController,
-  //             decoration: InputDecoration(labelText: 'Customer Phone'),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 
   void _fetchCustomer() async {
     final result = await CustomerService.fetchCustomer();
     setState(() {
       customers = result;
+      _filteredCustomers = result;
       _isLoading = false;
     });
   }
