@@ -156,7 +156,9 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                 itemBuilder: (_, index) {
                   final order = orders[index];
                   final total = (order['total'] as num).toDouble();
-                  final paid = (order['paid'] as num?)?.toDouble() ?? 0;
+                  final paid = order['paid'] != null
+                      ? (order['paid'] as num).toDouble()
+                      : 0.0;
                   final balance = total - paid;
                   final paymentStatus = _calculatePaymentStatus(paid, total);
 
@@ -247,16 +249,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                       ),
                     ],
                   ),
-                  child: Center(
-                    child: Text(
-                      '#${order['order_number'].toString().split('-').last}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
+                  child: Center(child: Icon(Icons.local_laundry_service)),
                 ),
                 const SizedBox(width: 20),
 
@@ -844,9 +837,9 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'Received':
+      case 'Recieved':
         return Colors.blue;
-      case 'Processing':
+      case 'Washing':
         return Colors.orange;
       case 'Ready':
         return Colors.green;

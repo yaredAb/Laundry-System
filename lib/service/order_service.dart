@@ -2,7 +2,9 @@ import 'package:laundry_pos/core/database/app_database.dart';
 import 'package:laundry_pos/service/order_items_service.dart';
 
 class OrderService {
-  static Future<List<Map<String, dynamic>>> loadOrdersWithCustomer() async {
+  static Future<List<Map<String, dynamic>>> loadOrdersWithCustomer({
+    String query = '',
+  }) async {
     final db = await AppDatabase.database;
 
     final result = await db.rawQuery('''
@@ -10,6 +12,7 @@ class OrderService {
         o.id, 
         o.order_number, 
         o.total, 
+        o.paid, 
         o.status, 
         o.created_at, 
         c.name AS customer_name

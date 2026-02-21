@@ -78,7 +78,7 @@ class _MainOrderScreenState extends State<MainOrderScreen> {
 
   void _addCustomer() async {
     if (_newCustomerController.text.trim().isEmpty) return;
-    final id = CustomerService.addCustomer(
+    final id = await CustomerService.addCustomer(
       _newCustomerController.text,
       phone: _newCustomerPhone.text,
     );

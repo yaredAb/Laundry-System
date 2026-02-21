@@ -721,8 +721,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                         width: double.infinity,
                                         child: ElevatedButton.icon(
                                           onPressed: _showAddPaymentDialogue,
-                                          icon: const Icon(Icons.payment),
-                                          label: const Text('Add Payment'),
+                                          icon: const Icon(
+                                            Icons.payment,
+                                            color: Colors.white,
+                                          ),
+                                          label: const Text(
+                                            'Add Payment',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.teal,
                                             padding: const EdgeInsets.symmetric(

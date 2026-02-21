@@ -592,9 +592,13 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                                 onPressed: _createNewOrder,
                                 icon: const Icon(
                                   Icons.add_shopping_cart,
+                                  color: Colors.white,
                                   size: 18,
                                 ),
-                                label: const Text('New Order'),
+                                label: const Text(
+                                  'New Order',
+                                  style: TextStyle(color: Colors.white),
+                                ),
                                 style: ElevatedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 14,
@@ -1801,6 +1805,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: Colors.white,
                           ),
                         ),
                       ),
