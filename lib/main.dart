@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:laundry_pos/core/database/app_database.dart';
 import 'package:laundry_pos/features/setup/setup_screen.dart';
 import 'package:laundry_pos/home_screen.dart';
+import 'package:laundry_pos/screens/splash_screen.dart';
+import 'package:laundry_pos/screens/upgrade_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io';
 
@@ -23,7 +25,13 @@ class LaundryApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Laundry System',
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
-      home: const LoadingScreen(),
+      // home: const SplashScreen(),
+      routes: {
+        '/': (context) => const SplashScreen(),
+        '/setup': (context) => const SetupScreen(),
+        '/home': (context) => const HomeScreen(),
+        '/upgrade': (context) => const UpgradeScreen(),
+      },
     );
   }
 }

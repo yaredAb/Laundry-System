@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_pos/core/database/app_database.dart';
 import 'package:laundry_pos/home_screen.dart';
+import 'package:laundry_pos/service/subscription_service.dart';
 
 class SetupScreen extends StatefulWidget {
   const SetupScreen({super.key});
@@ -19,6 +20,8 @@ class _SetupScreenState extends State<SetupScreen> {
       'store_name': _storeNameController.text,
       'store_phone': _storePhoneController.text,
     });
+
+    await SubscriptionService().getDeviceId();
 
     //Navigate to main screen
     Navigator.pushReplacement(

@@ -78,29 +78,29 @@ class SubscriptionService {
       }
     }
 
-    final deviceResult = await db.query('device', limit: 1);
-    if (deviceResult.isNotEmpty) {
-      String trialEndStr = deviceResult.first['trial_end_date'] as String;
-      DateTime trialEnd = DateTime.parse(trialEndStr);
-      DateTime now = DateTime.now();
+    // final deviceResult = await db.query('device', limit: 1);
+    // if (deviceResult.isNotEmpty) {
+    //   String trialEndStr = deviceResult.first['trial_end_date'] as String;
+    //   DateTime trialEnd = DateTime.parse(trialEndStr);
+    //   DateTime now = DateTime.now();
 
-      if (now.isBefore(trialEnd)) {
-        return SubscriptionStatus(
-          isPremium: true,
-          expiryDate: trialEnd,
-          planType: 'trial',
-          daysLeft: trialEnd.difference(now).inDays,
-          message: 'Trial active until $trialEndStr',
-          isTrial: true,
-        );
-      } else {
-        return SubscriptionStatus(
-          isPremium: false,
-          isExpired: true,
-          message: 'Trial expired on $trialEndStr',
-        );
-      }
-    }
+    //   if (now.isBefore(trialEnd)) {
+    //     return SubscriptionStatus(
+    //       isPremium: true,
+    //       expiryDate: trialEnd,
+    //       planType: 'trial',
+    //       daysLeft: trialEnd.difference(now).inDays,
+    //       message: 'Trial active until $trialEndStr',
+    //       isTrial: true,
+    //     );
+    //   } else {
+    //     return SubscriptionStatus(
+    //       isPremium: false,
+    //       isExpired: true,
+    //       message: 'Trial expired on $trialEndStr',
+    //     );
+    //   }
+    // }
 
     return SubscriptionStatus(
       isPremium: false,
@@ -169,6 +169,6 @@ class SubscriptionService {
   Future<void> clearSubscription() async {
     final db = await AppDatabase.database;
     await db.delete('subscription');
-    await db.delete('settings', where: "key = 'subscription_expiry'");
+    //await db.delete('settings', where: "key = 'subscription_expiry'");
   }
 }

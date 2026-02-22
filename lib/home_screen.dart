@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:laundry_pos/core/model/subscription_status.dart';
 import 'package:laundry_pos/features/customers/customer_list_screen.dart';
 import 'package:laundry_pos/features/orders/find_order_screen.dart';
 import 'package:laundry_pos/features/orders/main_order_screen.dart';
 import 'package:laundry_pos/features/orders/orders_list_screen.dart';
 import 'package:laundry_pos/screens/items_screen.dart';
+import 'package:laundry_pos/service/subscription_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -148,60 +150,107 @@ class _HomeScreenState extends State<HomeScreen> {
                       top: BorderSide(color: Colors.grey.shade200),
                     ),
                   ),
-                  child: Row(
+                  child: Column(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.teal.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.account_circle_outlined,
-                          color: Colors.teal,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Admin User',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                              ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.teal.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'admin@laundry.com',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            child: const Icon(
+                              Icons.account_circle_outlined,
+                              color: Colors.teal,
+                              size: 24,
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Admin User',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'admin@laundry.com',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: IconButton(
+                              onPressed: _logout,
+                              icon: const Icon(Icons.logout, size: 18),
+                              color: Colors.grey.shade700,
+                              tooltip: 'Logout',
+                              padding: const EdgeInsets.all(8),
+                            ),
+                          ),
+                        ],
                       ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: IconButton(
-                          onPressed: _logout,
-                          icon: const Icon(Icons.logout, size: 18),
-                          color: Colors.grey.shade700,
-                          tooltip: 'Logout',
-                          padding: const EdgeInsets.all(8),
+
+                      TextButton(
+                        onPressed: () {
+                          SubscriptionService().clearSubscription();
+                          Navigator.pushReplacementNamed(context, '/upgrade');
+                        },
+                        child: const Text(
+                          'End Subscription',
+                          style: TextStyle(fontSize: 12),
                         ),
                       ),
                     ],
                   ),
+                ),
+
+                FutureBuilder(
+                  future: SubscriptionService().checkSubscription(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      final status = snapshot.data as SubscriptionStatus;
+
+                      if (status.isTrial) {
+                        return Container(
+                          color: Colors.blue,
+                          padding: EdgeInsets.all(8),
+                          child: Text(
+                            'Trial: ${status.daysLeft} days remaining',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        );
+                      } else if (status.isPremium && !status.isTrial) {
+                        return Container(
+                          color: Colors.green,
+                          padding: EdgeInsets.all(8),
+                          child: Text(
+                            'Premium: ${status.daysLeft} days remaining',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        );
+                      }
+                    }
+                    return SizedBox.shrink();
+                  },
                 ),
               ],
             ),
