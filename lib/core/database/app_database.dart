@@ -96,6 +96,29 @@ class AppDatabase {
       )
     ''');
 
+    await db.execute('''
+    CREATE TABLE subscription (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      token TEXT,
+      plan_type TEXT,
+      expiry_date TEXT,
+      activated_date TEXT,
+      is_active INTEGER DEFAULT 1,
+      device_id TEXT
+    )
+  ''');
+
+    // Store device ID on first install
+    await db.execute('''
+    CREATE TABLE device (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      device_id TEXT UNIQUE,
+      trial_start_date TEXT,
+      trial_end_date TEXT,
+      trial_used INTEGER DEFAULT 0
+    )
+  ''');
+
     await _insertDefaultItems(db);
   }
 
