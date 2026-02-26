@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:laundry_pos/core/model/validation_result.dart';
 import 'package:laundry_pos/features/orders/main_order_screen.dart';
+import 'package:laundry_pos/service/code_validator.dart';
 import 'package:laundry_pos/service/subscription_service.dart';
 
 class UpgradeScreen extends StatefulWidget {
@@ -99,27 +101,25 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
     }
 
     setState(() => isActivating = true);
+    String code = _tokenController.text.trim().toUpperCase();
 
-    bool success = await SubscriptionService().activateToken(
-      _tokenController.text.trim(),
-    );
+    ValidationResult result = CodeValidator.validateCode(code);
 
     setState(() => isActivating = false);
 
-    if (success) {
+    if (result.isValid) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Premium activated')));
+      ).showSnackBar(SnackBar(content: Text(result.message)));
 
       //navigate to main screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => MainOrderScreen()),
-      );
+      Navigator.pushReplacementNamed(context, '/home');
+
+      await SubscriptionService().activateToken(result, code);
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Invalid code')));
+      ).showSnackBar(SnackBar(content: Text(result.message)));
     }
   }
 

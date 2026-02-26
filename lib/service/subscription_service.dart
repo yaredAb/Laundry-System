@@ -1,5 +1,6 @@
 import 'package:laundry_pos/core/database/app_database.dart';
 import 'package:laundry_pos/core/model/subscription_status.dart';
+import 'package:laundry_pos/core/model/validation_result.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class SubscriptionService {
@@ -109,60 +110,33 @@ class SubscriptionService {
   }
 
   //Activate with token
-  Future<bool> activateToken(String token) async {
+  Future<bool> activateToken(ValidationResult result, String code) async {
     try {
-      if (!token.startsWith('LNDRY-')) {
-        return false;
-      }
-
-      // Parse token format
-      List<String> parts = token.split('-');
-      if (parts.length != 3) return false;
-
-      // EXTRACT EXPIRY DATE
-      String expiryStr = parts[2];
-      if (expiryStr.length != 8) return false;
-
-      int year = int.parse(expiryStr.substring(0, 4));
-      int month = int.parse(expiryStr.substring(4, 6));
-      int day = int.parse(expiryStr.substring(6, 8));
-
-      DateTime expiryDate = DateTime(year, month, day);
-
       final db = await AppDatabase.database;
 
       //deactivate existing subscriptions
       await db.update('subscription', {'is_active': 0}, where: 'is_active = 1');
 
       await db.insert('subscription', {
-        'token': token,
-        'plan_type': _extractPlanType(token),
-        'expiry_date': expiryDate.toIso8601String(),
+        'token': code,
+        'plan_type': result.planType,
+        'expiry_date': result.expiryDate!.toIso8601String(),
         'activated_date': DateTime.now().toIso8601String(),
         'is_active': 1,
         'device_id': await getDeviceId(),
       });
 
       //update settings for quick access
-      await db.insert('settings', {
-        'key': 'subscription_expiry',
-        'value': expiryDate.toIso8601String(),
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      // await db.insert('settings', {
+      //   'key': 'subscription_expiry',
+      //   'value': expiryDate.toIso8601String(),
+      // }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       return true;
     } catch (e) {
       print('Activation error: $e');
       return false;
     }
-  }
-
-  String _extractPlanType(String token) {
-    if (token.contains('PREM')) {
-      return 'premium';
-    } else if (token.contains('BASIC')) {
-      return 'basic';
-    }
-    return 'unknown';
   }
 
   // For testing/admin: Clear subscription (for development)
