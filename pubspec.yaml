@@ -40,6 +40,8 @@ dependencies:
   screenshot: ^3.0.0
   share_plus: ^12.0.1
   path_provider: ^2.1.5
+  crypto: 
+  intl:
 
 dev_dependencies:
   flutter_test:

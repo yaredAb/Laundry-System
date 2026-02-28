@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:laundry_pos/core/model/validation_result.dart';
-import 'package:laundry_pos/features/orders/main_order_screen.dart';
 import 'package:laundry_pos/service/code_validator.dart';
 import 'package:laundry_pos/service/subscription_service.dart';
 
@@ -119,7 +118,7 @@ class _UpgradeScreenState extends State<UpgradeScreen> {
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(result.message)));
+      ).showSnackBar(SnackBar(content: Text('oops ${result.message}')));
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:laundry_pos/features/customers/customer_list_screen.dart';
 import 'package:laundry_pos/features/orders/find_order_screen.dart';
 import 'package:laundry_pos/features/orders/main_order_screen.dart';
 import 'package:laundry_pos/features/orders/orders_list_screen.dart';
+import 'package:laundry_pos/features/reports/report_screen.dart';
 import 'package:laundry_pos/screens/items_screen.dart';
 import 'package:laundry_pos/service/subscription_service.dart';
 
@@ -23,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const FindOrderScreen(),
     const ItemsScreen(),
     const CustomerListScreen(),
+    const ReportScreen(),
   ];
 
   final List<String> _titles = [
@@ -31,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'Find Order',
     'Service Items',
     'Customers',
+    'Reports',
   ];
 
   final List<IconData> _icons = [
@@ -39,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Icons.search,
     Icons.local_laundry_service,
     Icons.people,
+    Icons.report,
   ];
 
   final List<IconData> _selectedIcons = [
@@ -47,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Icons.search,
     Icons.local_laundry_service,
     Icons.people,
+    Icons.report,
   ];
 
   @override

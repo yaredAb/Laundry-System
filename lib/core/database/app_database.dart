@@ -25,6 +25,32 @@ class AppDatabase {
     return await openDatabase(path, version: 1, onCreate: _onCreate);
   }
 
+  // static Future<void> updateLastAccess() async {
+  //   final db = await database;
+  //   final now = DateTime.now();
+  //   final today = DateTime(now.year, now.month, now.day);
+
+  //   final result = await db.query(
+  //     'settings',
+  //     where: "key = 'last_access_date'",
+  //   );
+
+  //   if (result.isNotEmpty) {
+  //     String lastDateStr = result.first['value'] as String;
+  //     DateTime lastDate = DateTime.parse(lastDateStr);
+
+  //     if (lastDate.isAfter(today)) {
+  //       _handleDateTampering();
+  //       return;
+  //     }
+  //   }
+  // Update last access
+  //   await db.insert('settings', {
+  //     'key': 'last_access_date',
+  //     'value': today.toIso8601String(),
+  //   }, conflictAlgorithm: ConflictAlgorithm.replace);
+  // }
+
   static Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE settings (

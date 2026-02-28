@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:laundry_pos/core/model/validation_result.dart';
 
 class CodeValidator {
@@ -41,7 +42,9 @@ class CodeValidator {
     String expectedChecksum = _calculateChecksum(base);
 
     if (checkSumStr != expectedChecksum) {
-      return ValidationResult.invalid('Invalid activation code.');
+      return ValidationResult.invalid(
+        'Invalid activation code. expected checksum: $expectedChecksum',
+      );
     }
 
     DateTime expiry = _calculateExpiry(planCode, year, month);
@@ -59,35 +62,13 @@ class CodeValidator {
 
   static String _calculateChecksum(String input) {
     String encryptionKey = 'MAYA2026';
-    int hash = _crc32(input + encryptionKey);
 
-    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    String result = '';
+    final hmacSha256 = Hmac(sha256, utf8.encode(encryptionKey));
+    final digest = hmacSha256.convert(utf8.encode(input));
 
-    for (var i = 0; i < 4; i++) {
-      result = chars[hash % 36] + result;
-      hash ~/= 36;
-    }
-
-    return result;
-  }
-
-  static int _crc32(String input) {
-    List<int> bytes = utf8.encode(input);
-    int crc = 0xFFFFFFFF;
-
-    for (int byte in bytes) {
-      crc ^= byte;
-      for (int i = 0; i < 8; i++) {
-        if (crc & 1 != 0) {
-          crc = (crc >> 1) ^ 0xEDB88320;
-        } else {
-          crc >>= 1;
-        }
-      }
-    }
-
-    return ~crc & 0xFFFFFFFF;
+    print("BASE: '$input'");
+    print("DART CHECKSUM: ${digest.toString().substring(0, 4).toUpperCase()}");
+    return digest.toString().substring(0, 4).toUpperCase();
   }
 
   static DateTime _calculateExpiry(String planCode, int year, int month) {
@@ -95,7 +76,7 @@ class CodeValidator {
     int fullYear = 2000 + year;
 
     if (planCode == 'M') {
-      return DateTime(fullYear, month, now.day).subtract(Duration(days: 1));
+      return DateTime(fullYear, month + 1, now.day).subtract(Duration(days: 1));
     } else if (planCode == 'S') {
       return DateTime(fullYear, month + 6, now.day).subtract(Duration(days: 1));
     } else if (planCode == 'Y') {
